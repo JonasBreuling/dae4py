@@ -38,16 +38,19 @@ All example discussed in the lecture are implemented here.
     ```
 * windows
     
-    make sure the following programs are installed:
-    * [MinGW gcc](https://www.msys2.org/)
-    * [Strawberry Perl](https://strawberryperl.com/)
-    <!-- * [LAPACK](https://www.netlib.org/lapack/#_lapack_version_3_12_1_2) -->
     ```bash
     python -m venv myvenv
-    source myvenv/Scripts/activate
+    \myvenv\Scripts\activate.bat
     python -m pip install .
     ```
-    ... or go the easy way and use WSL2 with Ubuntu
+    Make sure that you are using the python interpreter of the virtual environment via
+
+    ```bash
+    python -c "import os, sys; print(os.path.dirname(sys.executable))"
+    ```
+
+    Compiling the fortran solvers on windows is by far not trivial. A simple and robust approach is to use WSL2 with Ubuntu.
+
 * MacOS
 
     tbd

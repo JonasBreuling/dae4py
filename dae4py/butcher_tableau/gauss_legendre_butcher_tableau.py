@@ -30,11 +30,11 @@ def gauss_legendre_tableau(s):
 
     # compute weights from B(1), B(2), ..., B(s)
     V = np.vander(c, increasing=True)
-    rhs = 1 / (1 + np.arange(s))
+    rhs = 1 / np.arange(1, s + 1)
     b = np.linalg.solve(V.T, rhs)
 
     # compute coefficent matrix
-    R = np.diag(1 / np.arange(1, s + 1))
+    R = np.diag(rhs)
     A = np.diag(c) @ V @ R @ np.linalg.inv(V)
 
     # quadrature and stage order

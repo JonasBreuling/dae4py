@@ -9,7 +9,7 @@ G = 1.0
 
 # equal masses for all three bodies
 m1 = m2 = m3 = 1.0
-m1 += 5e-2  # small mass pertubation
+# m1 += 5e-2  # small mass pertubation
 ms = [m1, m2, m3]
 
 # figure-8 initial conditions (from known approximations)
@@ -22,6 +22,20 @@ u1 = np.array([0.466203685, 0.43236573])
 u2 = u1.copy()
 u3 = -2 * u1.copy()
 u0 = np.concatenate((u1, u2, u3))
+
+# export initial conditions
+np.savetxt(
+    "three_body_problem_initial_conditions.txt",
+    np.hstack(
+        [
+            np.vstack([q1, q2, q3]),
+            np.vstack([u1, u2, u3]),
+        ]
+    ),
+    header="x, y, u, v",
+    delimiter=", ",
+    comments="",
+)
 
 
 def rhs(t, y):
@@ -46,7 +60,7 @@ def F(t, y, yp):
 
 
 # time span for the simulation
-t_span = (0, 20)
+t_span = (0, 6.4)
 t_eval = np.linspace(*t_span, 2000)
 
 # initial conditions
@@ -59,6 +73,15 @@ sol = solve_dae_radau(F, y0, yp0, t_span, t_eval=t_eval, atol=1e-6, rtol=1e-6, s
 # extract positions
 q = sol.y_eval[:, :6]
 x1, y1, x2, y2, x3, y3 = q.T
+
+# export numerical solution
+np.savetxt(
+    "three_body_problem_solution.txt",
+    q,
+    header="x1, y1, x2, y2, x3, y3",
+    delimiter=", ",
+    comments="",
+)
 
 # plot the trajectories
 plt.figure(figsize=(8, 6))

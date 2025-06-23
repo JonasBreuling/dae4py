@@ -287,7 +287,7 @@ if __name__ == "__main__":
     t_eval = np.linspace(t0, t1, num=int(5e2))
 
     # solver options
-    atol = rtol = 1e-6
+    atol = rtol = 1e-4
 
     # solve the system
     start = time.time()
@@ -299,6 +299,7 @@ if __name__ == "__main__":
         atol=atol,
         rtol=rtol,
         t_eval=t_eval,
+        s=5,
     )
     end = time.time()
     print(f"elapsed time: {end - start}")

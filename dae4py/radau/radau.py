@@ -3,9 +3,7 @@ from tqdm import tqdm
 from scipy._lib._util import _RichResult
 from scipy.integrate._ivp.common import EPS
 from scipy.optimize._numdiff import approx_derivative
-from scipy.linalg import lu_factor, lu_solve
 from scipy.linalg import eig, cdf2rdf
-from scipy.sparse import issparse
 from scipy.sparse.linalg import splu
 from dae4py.butcher_tableau import radau_tableau
 
@@ -74,7 +72,7 @@ def solve_dae_radau(
               t, y and y'; it will be called as ``M, J = jac(t, y, yp)``.
             * If None (default), the Jacobians will be approximated by
               finite differences using scipy's ``approx_derivative`` function.
-    controller_deadband: tuple, defaul: (1.0, 1.2)
+    controller_deadband: tuple, defaul: [1.0, 1.2]
         Range of the step-size scaling factor for which we supress step-size
         changes in order to increase performance by not recomputing the LU
         decompositions.
@@ -129,7 +127,6 @@ def solve_dae_radau(
         nfev += 1
         return np.atleast_1d(F(t, y, yp))
 
-    sparse_jac = False
     if jac is None:
 
         def jac(t, y, yp):
@@ -139,13 +136,7 @@ def solve_dae_radau(
             M = approx_derivative(lambda _yp: F(t, y, _yp), yp)
             return M, J
 
-        M, J = jac(t0, y0, yp0)
-
     else:
-        M, J = jac(t0, y0, yp0)
-        if issparse(M) or issparse(J):
-            sparse_jac = True
-
         jac_ = jac
 
         def jac(t, y, yp):
@@ -153,33 +144,21 @@ def solve_dae_radau(
             njev += 1
             return jac_(t, y, yp)
 
-    if sparse_jac:
+    def factor_lu(A):
+        nonlocal nlu
+        nlu += 1
+        return splu(A)
 
-        def factor_lu(A):
-            nonlocal nlu
-            nlu += 1
-            return splu(A)
+    def solve_lu(LU, rhs):
+        nonlocal nlgs
+        nlgs += 1
+        return LU.solve(rhs)
 
-        def solve_lu(LU, rhs):
-            nonlocal nlgs
-            nlgs += 1
-            return LU.solve(rhs)
-
-    else:
-
-        def factor_lu(A):
-            nonlocal nlu
-            nlu += 1
-            return lu_factor(A)
-
-        def solve_lu(LU, rhs):
-            nonlocal nlgs
-            nlgs += 1
-            return lu_solve(LU, rhs)
+    # initial Jacobians
+    M, J = jac(t0, y0, yp0)
 
     # newton tolerance as in radau.f line 1008ff
-    EXPMI = (2 * s) / (s + 1)
-    newton_tol = max(10 * EPS / rtol, min(0.03, rtol ** (EXPMI - 1)))
+    newton_tol = max(10 * EPS / rtol, min(rtol**0.5, 0.03))
 
     # maximum number of newton iterations:
     # - radau.f line 446 initially choses NIT=7 and subsequently updates the
@@ -416,7 +395,7 @@ def solve_dae_radau(
                 else:
                     step_accepted = True
 
-            # compute new Jacobian if convergence is to slow
+            # compute new Jacobian if convergence is too slow
             recompute_jac = (
                 k + 1 > jac_recompute_newton_iter and rate > jac_recompute_rate
             )

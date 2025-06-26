@@ -158,7 +158,9 @@ def solve_dae_radau(
     M, J = jac(t0, y0, yp0)
 
     # newton tolerance as in radau.f line 1008ff
-    newton_tol = max(10 * EPS / rtol, min(rtol**0.5, 0.03))
+    # newton_tol = max(10 * EPS / rtol, min(rtol**0.5, 0.03))
+    # newton tolerance as in pside.f
+    newton_tol = 0.01
 
     # maximum number of newton iterations:
     # - radau.f line 446 initially choses NIT=7 and subsequently updates the

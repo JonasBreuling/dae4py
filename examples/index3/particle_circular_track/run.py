@@ -3,11 +3,12 @@ import matplotlib.pyplot as plt
 from dae4py.irk import solve_dae_IRK
 from dae4py.bdf import solve_dae_BDF
 from dae4py.butcher_tableau import radau_tableau, gauss_legendre_tableau
+from dae4py.genalpha import solve_dae_genalpha
 from particle_circular_track import problem
 from dae4py.benchmark import convergence_analysis
 
 
-def trajectory(s=None, tableau=None):
+def trajectory(s=None, tableau=None, rho_inf=None):
     t_span = problem.t_span
     y0 = problem.y0
     yp0 = problem.yp0
@@ -16,7 +17,12 @@ def trajectory(s=None, tableau=None):
     h = 5e-3
     atol = rtol = 1e-6
     if s is None or tableau is None:
-        sol = solve_dae_BDF(problem.F, y0, yp0, t_span, h, atol=atol, rtol=rtol)
+        if rho_inf is None:
+            sol = solve_dae_BDF(problem.F, y0, yp0, t_span, h, atol=atol, rtol=rtol)
+        else:
+            sol = solve_dae_genalpha(
+                problem.F, y0, yp0, t_span, h, rho_inf=rho_inf, atol=atol, rtol=rtol
+            )
     else:
         sol = solve_dae_IRK(
             problem.F, y0, yp0, t_span, h, tableau(s), atol=atol, rtol=rtol
@@ -61,6 +67,7 @@ def convergence():
 
 
 if __name__ == "__main__":
+    trajectory(rho_inf=0.5)  # gen-alpha case
     trajectory()  # BDF case
     trajectory(s=2, tableau=gauss_legendre_tableau)
     trajectory(s=2, tableau=radau_tableau)

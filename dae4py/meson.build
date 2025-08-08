@@ -13,6 +13,7 @@ py.install_sources(
 subdir('bdf')
 subdir('butcher_tableau')
 subdir('irk')
+subdir('genalpha')
 subdir('math')
 subdir('radau')
 

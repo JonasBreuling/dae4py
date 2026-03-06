@@ -2,7 +2,6 @@ import numpy as np
 from dae4py.irk import solve_dae_IRK
 from dae4py.butcher_tableau import radau_tableau, gauss_legendre_tableau
 
-
 """
 References
 ----------

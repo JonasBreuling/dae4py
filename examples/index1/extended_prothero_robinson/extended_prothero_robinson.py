@@ -1,7 +1,6 @@
 import numpy as np
 from dae4py.dae_problem import DAEProblem
 
-
 omega = 3
 eps = 1e3
 la = -20

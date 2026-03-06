@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from dae4py.radau import solve_dae_radau
 from kamke import KamkeDAEProblem
 
-
 if __name__ == "__main__":
     # generate the problem
     C = 1

@@ -4,7 +4,6 @@ import pytest
 from dae4py.irk import solve_dae_IRK
 from dae4py.butcher_tableau import radau_tableau, gauss_legendre_tableau
 
-
 stages = [2, 3]
 
 buther_tableaus = [

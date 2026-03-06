@@ -1,8 +1,7 @@
 import numpy as np
 from dae4py.dae_problem import DAEProblem
 
-
-INDEX = 3  # possible options: [0, 1, 2, 3, "GGL", "Hiller"]
+INDEX = "Hiller"  # possible options: [0, 1, 2, 3, "GGL", "Hiller"]
 
 omega = 2 * np.pi
 
@@ -207,7 +206,8 @@ index = INDEX if INDEX in [0, 1, 2, 3] else (2 if INDEX == "GGL" else 1)
 problem = DAEProblem(
     name="Circular motion",
     F=F,
-    t_span=(0.1 * np.pi, 0.45 * np.pi),
+    # t_span=(0.1 * np.pi, 0.45 * np.pi),
+    t_span=(0, 2 * np.pi),
     index=index,
     true_sol=true_sol,
 )

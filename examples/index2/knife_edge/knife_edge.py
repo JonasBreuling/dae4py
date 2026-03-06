@@ -1,7 +1,6 @@
 import numpy as np
 from dae4py.dae_problem import DAEProblem
 
-
 INDEX = 2  # possible options: [1, 2]
 
 m = 1

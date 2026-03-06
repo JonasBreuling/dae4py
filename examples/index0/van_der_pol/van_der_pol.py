@@ -1,7 +1,6 @@
 import numpy as np
 from dae4py.dae_problem import DAEProblem
 
-
 eps = 1e-3
 t0 = 0
 t1 = 5

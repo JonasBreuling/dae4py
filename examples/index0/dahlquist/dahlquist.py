@@ -1,7 +1,6 @@
 import numpy as np
 from dae4py.dae_problem import DAEProblem
 
-
 t0 = 0
 t1 = 5
 la = -1.5

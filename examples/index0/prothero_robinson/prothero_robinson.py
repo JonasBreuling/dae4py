@@ -1,7 +1,6 @@
 import numpy as np
 from dae4py.dae_problem import DAEProblem
 
-
 la = -20
 phi = lambda t: np.arctan(2 * t)
 phi_dot = lambda t: 2 / (1 + 4 * t**2)

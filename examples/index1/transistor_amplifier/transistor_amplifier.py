@@ -1,7 +1,6 @@
 import numpy as np
 from dae4py.dae_problem import DAEProblem
 
-
 # problem parameters
 U_b = 6
 R0 = 1000

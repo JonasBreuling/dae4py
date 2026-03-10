@@ -53,7 +53,7 @@ def F(t, x, xp):
 
 
 t0 = 0
-t1 = 180
+t1 = 200
 y0 = np.array([0.444, 0.00123, 0, 0.007, 0], dtype=float)
 z0 = Ks * y0[0] * y0[3]
 yp0 = f(y0, z0)

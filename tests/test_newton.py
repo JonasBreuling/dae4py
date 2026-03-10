@@ -3,7 +3,6 @@ import pytest
 from scipy.optimize import rosen_der, rosen_hess
 from dae4py.math import newton
 
-
 parameters_newton = ["2-point", "3-point", "cs", rosen_hess]
 
 

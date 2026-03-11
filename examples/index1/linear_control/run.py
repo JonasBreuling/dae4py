@@ -26,7 +26,7 @@ def trajectory(s=None, tableau=None):
     yp = sol.yp
 
     # export
-    header = "t_pos, q, u, la1, la2, tau, q_dot, u_dot, la1_dot, la2_dot, tau_dot"
+    header = "t, q, u, la1, la2, tau, q_dot, u_dot, la1_dot, la2_dot, tau_dot"
     np.savetxt(
         "linear_control.txt",
         np.column_stack((t, y, yp)),
@@ -121,7 +121,7 @@ def adaptive_radau_IIA(s=3):
     yp = sol.yp_eval
 
     # export
-    header = "t_pos, q, u, la1, la2, tau, q_dot, u_dot, la1_dot, la2_dot, tau_dot"
+    header = "t, q, u, la1, la2, tau, q_dot, u_dot, la1_dot, la2_dot, tau_dot"
     np.savetxt(
         "linear_control.txt",
         np.column_stack((t, y, yp)),

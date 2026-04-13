@@ -22,7 +22,7 @@ def F(t, y, yp):
 
 t0 = 0
 t1 = 500
-h0 = 2.5
+h0 = 2
 q20 = R * np.sqrt(h0)
 y0 = np.array([h0, q20], dtype=float)
 yp0 = np.array([(q1(t0) - q20) / A, 0.0], dtype=float)

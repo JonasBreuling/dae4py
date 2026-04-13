@@ -2,12 +2,19 @@ import numpy as np
 from dae4py.dae_problem import DAEProblem
 
 INDEX = "Hiller"  # possible options: [0, 1, 2, 3, "GGL", "Hiller"]
+# INDEX = "GGL"
+# INDEX = 2
+# INDEX = 1
+# INDEX = 0
 
 omega = 2 * np.pi
 
+# omega = np.pi / 2
+# eps = 1e3
+# eps = 100
 
 def PHI(t):
-    """The time derivative of this function has to be phi_p(t)**2."""
+    """The time derivative of this function has to be phi_dot(t)**2."""
     return omega**2 * (t / 2 + np.sin(2 * t) / 4)
 
 
@@ -20,7 +27,6 @@ def phi_p(t):
 
 
 def phi_pp(t):
-    """This coincides with the force F(t)."""
     return -omega * np.sin(t)
 
 
@@ -203,11 +209,17 @@ match INDEX:
 
 index = INDEX if INDEX in [0, 1, 2, 3] else (2 if INDEX == "GGL" else 1)
 
+# t0 = 0.0
+# y0, yp0 = true_sol(t0)
+# F0 = F(t0, y0, yp0)
+# print(f"F0: {F0}")
+# exit()
+
 problem = DAEProblem(
     name="Circular motion",
     F=F,
-    # t_span=(0.1 * np.pi, 0.45 * np.pi),
-    t_span=(0, 2 * np.pi),
+    t_span=(0.1 * np.pi, 0.45 * np.pi),
+    # t_span=(0, 2 * np.pi),
     index=index,
     true_sol=true_sol,
 )

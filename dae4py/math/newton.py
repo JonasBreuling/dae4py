@@ -7,11 +7,11 @@ from scipy.linalg import lu_factor, lu_solve
 def newton(
     fun,
     x0,
-    jac="2-point",
+    jac="3-point",
     atol=1e-6,
     rtol=1e-6,
-    max_iter=20,
-    chord=True,
+    max_iter=30,
+    chord=False,
 ):
     """
     This function implements the Newton-Raphson method for solving nonlinear

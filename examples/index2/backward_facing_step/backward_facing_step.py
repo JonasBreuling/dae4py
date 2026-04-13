@@ -4,6 +4,8 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from scipy.optimize._numdiff import approx_derivative
+from scipy.linalg import issymmetric
 from dae4py.radau import solve_dae_radau
 
 
@@ -158,7 +160,7 @@ def redundant_coordinates(t, y, yp, nx, ny, BC):
 def F(t, y, yp):
     # set boundary conditions
     u, v, p, ut, vt, pt = redundant_coordinates(t, y, yp, nx, ny, BC)
-    p = pt  # note: Index reduction!
+    # p = pt  # note: Index reduction!
 
     # interpolate velocities
     uij = 0.5 * (u[:-1, 1:-1] + u[1:, 1:-1])
@@ -208,6 +210,7 @@ def F(t, y, yp):
 
 def animate(x, y, u, v, p, interval=1):
     fig, ax = plt.subplots()
+    # plt.gca().invert_yaxis()
 
     def update(num):
         ax.clear()
@@ -228,29 +231,72 @@ def animate(x, y, u, v, p, interval=1):
     plt.show()
 
 
-if __name__ == "__main__":
-    ############
-    # parameters
-    ############
-    # domain
-    h = 1
-    H = 2 * h
-    Lx = 10 * h
-    Ly = 2 * h + H
+############
+# parameters
+############
+# domain
+h = 1
+H = 2 * h
+Lx = 10 * h
+Ly = 2 * h + H
 
-    # number of cell centers per h
-    nxh, nyh = 4, 4
+# number of cell centers per h
+nxh, nyh = 4, 4
 
-    nx = int(Lx / h * nxh)
-    ny = int(Ly / h * nyh)
-    print(f"nx: {nx}")
-    print(f"ny: {ny}")
+nx = int(Lx / h * nxh)
+ny = int(Ly / h * nyh)
+print(f"nx: {nx}")
+print(f"ny: {ny}")
+
+# kinematic viscosity
+nu = 1
+
+# initial conditions
+y0, yp0 = initial_conditions(nx, ny)
+print(f"DOF's: {len(y0)}")
+
+# generate the grid
+xij, yij, xi2j2, yi2j2, dx, dy = create_grid(Lx, Ly, nx, ny)
+
+global BC
+BC = None
+
+def sparsity_pattern():
+    global BC
+    # boundary conditions (no B.C. for Jacobian sparsity pattern)
+    def BC(t):
+        return {
+            "u_top": None,
+            "u_bot": None,
+            "u_left": None,
+            "u_right": None,
+            "v_top": None,
+            "v_bot": None,
+            "v_left": None,
+            "v_right": None,
+        }
+
+    J0 = approx_derivative(
+        lambda y: F(0, y, np.zeros_like(y)),
+        y0 + np.random.rand(len(y0)) * 1e-6,  # perturbation for numerical stability
+    )
+    Jp0 = approx_derivative(
+        lambda yp: F(0, np.zeros_like(yp), yp),
+        yp0 + np.random.rand(len(yp0)) * 1e-6,  # perturbation for numerical stability,
+    )
+
+    fig, ax = plt.subplots(1, 2)
+    ax[0].spy(J0, markersize=1)
+    ax[0].set_title("Jacobian J")
+    ax[1].spy(Jp0, markersize=1)
+    ax[1].set_title("Jacobian Jp")
+    plt.show()
+
+def run():
+    global BC
 
     # reference velocity
     U0 = 50
-
-    # kinematic viscosity
-    nu = 1
 
     # linear spaced vertical mesh points
     y = np.linspace(0, Ly, ny + 2)
@@ -272,13 +318,6 @@ if __name__ == "__main__":
             "v_left": 0,
             "v_right": None,
         }
-
-    # generate the grid
-    xij, yij, xi2j2, yi2j2, dx, dy = create_grid(Lx, Ly, nx, ny)
-
-    # initial conditions
-    y0, yp0 = initial_conditions(nx, ny)
-    print(f"DOF's: {len(y0)}")
 
     # time span
     t0 = 0
@@ -438,3 +477,7 @@ if __name__ == "__main__":
     pvd_file.write("    </Collection>\n")
     pvd_file.write("  </VTKFile>\n")
     pvd_file.close()
+
+if __name__ == "__main__":
+    sparsity_pattern()
+    # run()

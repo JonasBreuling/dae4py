@@ -46,8 +46,10 @@ def convergence():
     h_max = Dt / 4
     h0s = h_max * (1 / 2) ** (np.arange(pow_min, pow_max, dtype=float))
 
-    rtols = 1e-16 * np.ones_like(h0s)
-    atols = 1e-16 * np.ones_like(h0s)
+    # rtols = 1e-16 * np.ones_like(h0s)
+    # atols = 1e-16 * np.ones_like(h0s)
+    rtols = 1e-14 * np.ones_like(h0s)
+    atols = 1e-14 * np.ones_like(h0s)
 
     print(f"rtols: {rtols}")
     print(f"atols: {atols}")
@@ -69,7 +71,7 @@ def adaptive_radau_IIA(s=3):
 
     # solver options
     t_eval = None
-    t_eval = np.linspace(*t_span, num=10)
+    t_eval = np.linspace(*t_span, num=500)
     h0 = 5e-3
     atol = 1e-8
     rtol = 1e-8
@@ -129,8 +131,8 @@ def adaptive_radau_IIA(s=3):
 if __name__ == "__main__":
     # trajectory()  # BDF case
     # trajectory(s=2, tableau=gauss_legendre_tableau)
-    # trajectory(s=2, tableau=radau_tableau)
+    trajectory(s=2, tableau=radau_tableau)
 
-    adaptive_radau_IIA(s=3)
+    # adaptive_radau_IIA(s=3)
 
     # convergence()

@@ -1,7 +1,6 @@
 import numpy as np
 from tqdm import tqdm
 from scipy._lib._util import _RichResult
-from scipy.integrate._ivp.common import EPS
 from scipy.optimize._numdiff import approx_derivative
 from scipy.linalg import eig, cdf2rdf
 from scipy.sparse.linalg import splu

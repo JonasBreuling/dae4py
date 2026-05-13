@@ -1,7 +1,7 @@
 import numpy as np
 from dae4py.dae_problem import DAEProblem
 
-INDEX = 2  # possible options: [1, 2]
+INDEX = 1  # possible options: [1, 2]
 
 m = 1
 Theta = 1
@@ -9,6 +9,9 @@ g = 9.81
 Omega = 1
 alpha = 35 / 180 * np.pi
 salpha = np.sin(alpha)
+
+
+jac = None
 
 
 match INDEX:
@@ -29,6 +32,38 @@ match INDEX:
             F[5] = Theta * omegap
             F[6] = v * sphi - u * cphi
             return F
+        
+        def jac(t, vy, vyp):
+            x, y, phi, u, v, omega, _ = vy
+            xp, yp, phip, up, vp, omegap, lap = vyp
+
+            sphi, cphi = np.sin(phi), np.cos(phi)
+
+            # fmt: off
+            J = np.array([
+                [0, 0,                   0,    -1,    0,  0, 0],
+                [0, 0,                   0,     0,   -1,  0, 0],
+                [0, 0,                   0,     0,    0, -1, 0],
+                [0, 0,         -sphi * lap,     0,    0,  0, 0],
+                [0, 0,         -cphi * lap,     0,    0,  0, 0],
+                [0, 0,                   0,     0,    0,  0, 0],
+                [0, 0, v * cphi + u * sphi, -cphi, sphi,  0, 0],
+            ])
+            # fmt: on
+
+            # fmt: off
+            M = np.array([
+                [1, 0, 0, 0, 0,     0,     0],
+                [0, 1, 0, 0, 0,     0,     0],
+                [0, 0, 1, 0, 0,     0,     0],
+                [0, 0, 0, m, 0,     0,  cphi],
+                [0, 0, 0, 0, m,     0, -sphi],
+                [0, 0, 0, 0, 0, Theta,     0],
+                [0, 0, 0, 0, 0,     0,     0],
+            ])
+            # fmt: on
+
+            return M, J
 
         def true_sol(t):
             x = (g * salpha / Omega) * (t / 2 - np.sin(2 * Omega * t) / (4 * Omega))
@@ -139,12 +174,13 @@ match INDEX:
             )
 
             return vy, vyp
-
+        
 
 problem = DAEProblem(
-    name="Knife edge",
+    name="knife_edge",
     F=F,
     t_span=(0, 2 * np.pi / Omega),
     index=INDEX,
     true_sol=true_sol,
+    jac=jac,
 )

@@ -42,14 +42,21 @@ def trajectory(s=None, tableau=None):
 def convergence():
     Dt = problem.t1 - problem.t0
     pow_min = 0
-    pow_max = 10
+    # pow_max = 5
+    pow_max = 14
     h_max = Dt / 4
     h0s = h_max * (1 / 2) ** (np.arange(pow_min, pow_max, dtype=float))
 
     # rtols = 1e-16 * np.ones_like(h0s)
     # atols = 1e-16 * np.ones_like(h0s)
-    rtols = 1e-14 * np.ones_like(h0s)
+    rtols = 1e-15 * np.ones_like(h0s)
+    atols = 1e-15 * np.ones_like(h0s)
+    rtols = 1e-17 * np.ones_like(h0s)
     atols = 1e-14 * np.ones_like(h0s)
+    # rtols = 1e-12 * np.ones_like(h0s)
+    # atols = 1e-12 * np.ones_like(h0s)
+    # rtols = 1e-10 * h0s
+    # atols = 1e-10 * h0s
 
     print(f"rtols: {rtols}")
     print(f"atols: {atols}")
@@ -131,8 +138,8 @@ def adaptive_radau_IIA(s=3):
 if __name__ == "__main__":
     # trajectory()  # BDF case
     # trajectory(s=2, tableau=gauss_legendre_tableau)
-    trajectory(s=2, tableau=radau_tableau)
+    # trajectory(s=2, tableau=radau_tableau)
 
     # adaptive_radau_IIA(s=3)
 
-    # convergence()
+    convergence()

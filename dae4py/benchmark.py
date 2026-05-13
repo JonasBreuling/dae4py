@@ -6,9 +6,10 @@ from dae4py.irk import solve_dae_IRK
 from dae4py.butcher_tableau import radau_tableau, gauss_legendre_tableau
 
 solvers = [
-    # ("RadauIIA(1)", solve_dae_IRK, {"tableau": radau_tableau(1)}),
+    ("RadauIIA(1)", solve_dae_IRK, {"tableau": radau_tableau(1)}),
     ("RadauIIA(2)", solve_dae_IRK, {"tableau": radau_tableau(2)}),
     ("RadauIIA(3)", solve_dae_IRK, {"tableau": radau_tableau(3)}),
+    ("RadauIIA(4)", solve_dae_IRK, {"tableau": radau_tableau(4)}),
     # # ("Gauss-Legendre(1)", solve_dae_IRK, {"tableau": gauss_legendre_tableau(1)}),
     # # ("Gauss-Legendre(2)", solve_dae_IRK, {"tableau": gauss_legendre_tableau(2)}),
     # ("Gauss-Legendre(3)", solve_dae_IRK, {"tableau": gauss_legendre_tableau(3)}),
@@ -41,6 +42,7 @@ def convergence_analysis(problem, rtols, atols, h0s):
                 yp0=problem.yp0,
                 t_span=problem.t_span,
                 h=h0,
+                jac=problem.jac,
                 atol=atol,
                 rtol=rtol,
                 **kwargs,
@@ -80,8 +82,17 @@ def convergence_analysis(problem, rtols, atols, h0s):
 
     for i, name_method_kwargs in enumerate(solvers):
         solver_name = name_method_kwargs[0]
-        header = "".join(["h"] + [f", e{i + 1}" for i in range(n)])
-        data = np.hstack([h0s[:, None], errors_y[i]])
+        # header = "".join(["h"] + [f", e{i + 1}" for i in range(n)])
+        # data_y = np.hstack([h0s[:, None], errors_y[i]])
+        # data_yp = np.hstack([h0s[:, None], errors_yp[i]])
+
+        # a single combined error
+        header = "h, error_y, error_yp"
+        data = np.vstack([
+            h0s, 
+            np.linalg.norm(errors_y[i], axis=1) / errors_y[i].shape[1],
+            np.linalg.norm(errors_yp[i], axis=1) / errors_yp[i].shape[1],
+        ]).T
 
         np.savetxt(
             f"{problem.name}_index{problem.index}_{solver_name}_convergence.txt",
@@ -105,7 +116,7 @@ def convergence_analysis(problem, rtols, atols, h0s):
                 h0s, ei[:, j], "-o", label=f"{solvers[i][0]}; p≈{rates_y[i, j]:0.2f}"
             )
 
-        ax[j].set_title(f"convergence analysis:")
+        ax[j].set_title(f"convergence analysis (y):")
         ax[j].set_xscale("log")
         ax[j].set_yscale("log")
         ax[j].grid()
@@ -127,7 +138,7 @@ def convergence_analysis(problem, rtols, atols, h0s):
                 h0s, ei[:, j], "-o", label=f"{solvers[i][0]}; p≈{rates_yp[i, j]:0.2f}"
             )
 
-        ax[j].set_title(f"convergence analysis:")
+        ax[j].set_title(f"convergence analysis (yp):")
         ax[j].set_xscale("log")
         ax[j].set_yscale("log")
         ax[j].grid()

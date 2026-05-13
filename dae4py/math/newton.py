@@ -10,7 +10,7 @@ def newton(
     jac="3-point",
     atol=1e-6,
     rtol=1e-6,
-    max_iter=30,
+    max_iter=1000,
     chord=False,
 ):
     """
@@ -112,6 +112,12 @@ def newton(
                 J = np.atleast_2d(jacobian(x))
                 dx = np.linalg.solve(J, f)
 
+                # # do iterative refinement to improve solution
+                # iter_ref = 4
+                # for _ in range(iter_ref):
+                #     res = f - J @ dx
+                #     dx += np.linalg.solve(J, res)
+
             # estimate rate of convergence
             norm_dx = np.linalg.norm(dx)
             if i > 1:
@@ -125,9 +131,17 @@ def newton(
             # new function value, error and convergence check
             f = np.atleast_1d(fun(x))
             error = np.linalg.norm(f / scale) / scale.size**0.5
+
+            # # step-size error
+            # scale = atol + np.maximum(np.abs(x0), np.abs(x)) * rtol
+            # error = np.linalg.norm(dx / scale) / scale.size**0.5
+
             converged = error < 1
             if converged:
                 break
+
+    if not converged:
+        print(f"")
 
     return _RichResult(
         x=x,

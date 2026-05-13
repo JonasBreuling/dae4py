@@ -4,6 +4,7 @@ from dae4py.irk import solve_dae_IRK
 from dae4py.bdf import solve_dae_BDF
 from dae4py.butcher_tableau import radau_tableau, gauss_legendre_tableau
 from knife_edge import problem
+from dae4py.benchmark import convergence_analysis
 
 
 def trajectory(s=None, tableau=None):
@@ -42,7 +43,33 @@ def trajectory(s=None, tableau=None):
     plt.show()
 
 
+def convergence():
+    Dt = problem.t1 - problem.t0
+    pow_min = 0
+    pow_max = 14
+    h_max = Dt / 4
+    h0s = h_max * (1 / 2) ** (np.arange(pow_min, pow_max, dtype=float))
+
+    # rtols = 1e-16 * np.ones_like(h0s)
+    # atols = 1e-16 * np.ones_like(h0s)
+    rtols = 1e-17 * np.ones_like(h0s)
+    atols = 1e-14 * np.ones_like(h0s)
+
+    print(f"rtols: {rtols}")
+    print(f"atols: {atols}")
+    print(f"h0s: {h0s}")
+
+    errors, rates = convergence_analysis(
+        problem,
+        rtols,
+        atols,
+        h0s,
+    )
+
+
 if __name__ == "__main__":
-    trajectory()  # BDF case
-    trajectory(s=3, tableau=gauss_legendre_tableau)
-    trajectory(s=2, tableau=radau_tableau)
+    # trajectory()  # BDF case
+    # trajectory(s=3, tableau=gauss_legendre_tableau)
+    # trajectory(s=2, tableau=radau_tableau)
+
+    convergence()

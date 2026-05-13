@@ -30,6 +30,9 @@ def phi_pp(t):
     return -omega * np.sin(t)
 
 
+jac = None
+
+
 match INDEX:
     case 0:
 
@@ -180,6 +183,36 @@ match INDEX:
             R[5] = x**2 + y**2 - 1
 
             return R
+        
+        def jac(t, vy, vyp):
+            x, y, u, v, _, _ = vy
+            x_dot, y_dot, u_dot, v_dot, Lap, Mup = vyp
+
+            force = phi_pp(t)
+
+            # fmt: off
+            J = np.array([
+                [-2 * Mup,        0,    -1,     0, 0, 0],
+                [       0, -2 * Mup,     0,    -1, 0, 0],
+                [-2 * Lap,    force,     0,     0, 0, 0],
+                [  -force, -2 * Lap,     0,     0, 0, 0],
+                [   2 * u,    2 * v, 2 * x, 2 * y, 0, 0],
+                [   2 * x,    2 * y,     0,     0, 0, 0],
+            ])
+            # fmt: on
+
+            # fmt: off
+            M = np.array([
+                [1, 0, 0, 0,      0, -2 * x],
+                [0, 1, 0, 0,      0, -2 * y],
+                [0, 0, 1, 0, -2 * x,      0],
+                [0, 0, 0, 1, -2 * y,      0],
+                [0, 0, 0, 0,      0,      0],
+                [0, 0, 0, 0,      0,      0],
+            ])
+            # fmt: on
+
+            return M, J
 
         def true_sol(t):
             y = np.array(
@@ -216,10 +249,11 @@ index = INDEX if INDEX in [0, 1, 2, 3] else (2 if INDEX == "GGL" else 1)
 # exit()
 
 problem = DAEProblem(
-    name="Circular motion",
+    name="particle",
     F=F,
     t_span=(0.1 * np.pi, 0.45 * np.pi),
     # t_span=(0, 2 * np.pi),
     index=index,
     true_sol=true_sol,
+    jac=jac,
 )

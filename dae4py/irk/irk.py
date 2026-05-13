@@ -4,7 +4,7 @@ from scipy._lib._util import _RichResult
 from dae4py.math import newton
 
 
-def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, atol=1e-6, rtol=1e-6):
+def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6):
     """
     Solves a system of DAEs using implicit Runge-Kutta methods.
 
@@ -26,6 +26,8 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, atol=1e-6, rtol=1e-6):
         Absolute tolerance for the Newton solver.
     rtol: float, default: 1e-6
         Relative tolerance for the Newton solver.
+    jac: callable
+        Jacobian of the method. Returns (M, J) = (dF/dy', dF/dy).
 
     Returns
     -------
@@ -76,9 +78,35 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, atol=1e-6, rtol=1e-6):
                 for i in range(s):
                     FF[i] = F(T[i], Y[i], Yp[i])
                 return FF.flatten()
+            
+            if jac is not None:
+                def jacobian(Yp_flat):
+                    # reshape flat input to stage derivatives
+                    Yp = Yp_flat.reshape(s, -1)
+
+                    # compute stage solutions
+                    Y = y0 + h * A.dot(Yp)
+
+                    # global Newton matrix
+                    J = np.zeros((s * m, s * m))
+                    for i in range(s):
+                        Jyp_i, Jy_i = jac(T[i], Y[i], Yp[i])
+
+                        row = slice(i * m, (i + 1) * m)
+                        for j in range(s):
+                            col = slice(j * m, (j + 1) * m)
+                            block = h * A[i, j] * Jy_i
+                            if i == j:
+                                block = block + Jyp_i
+
+                            J[row, col] = block
+
+                    return J
+            else:
+                jacobian = "3-point"
 
             # solve the nonlinear system
-            sol = newton(residual, Yp.flatten(), atol=atol, rtol=rtol)
+            sol = newton(residual, Yp.flatten(), jac=jacobian, atol=atol, rtol=rtol)
             if not sol.success:
                 raise RuntimeError(
                     f"Newton solver failed at t={t0 + h} with error={sol.error:.2e}"
@@ -90,6 +118,7 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, atol=1e-6, rtol=1e-6):
 
             # update y and y'
             y1 = y0 + h * b.dot(Yp)
+            y1 = Y[-1]
             yp1 = Yp[-1]  # only correct for stiffly accurate methods
 
             # append to solution arrays

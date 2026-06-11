@@ -77,6 +77,8 @@ def newton(
                 lambda y: fun(y),
                 x,
                 method=jac,
+                rel_step=1e-6,
+                abs_step=1e-6,
             )
 
     # eliminate round-off errors
@@ -87,10 +89,10 @@ def newton(
     f = fun(x)
 
     # scaling with relative and absolute tolerances
-    scale = atol + np.abs(f) * rtol
+    scale_f = atol + np.abs(f) * rtol
 
     # error of initial guess
-    error = np.linalg.norm(f / scale) / scale.size**0.5
+    error = np.linalg.norm(f / scale_f) / scale_f.size**0.5
     converged = error < 1
 
     # Newton loop
@@ -112,12 +114,6 @@ def newton(
                 J = np.atleast_2d(jacobian(x))
                 dx = np.linalg.solve(J, f)
 
-                # # do iterative refinement to improve solution
-                # iter_ref = 4
-                # for _ in range(iter_ref):
-                #     res = f - J @ dx
-                #     dx += np.linalg.solve(J, res)
-
             # estimate rate of convergence
             norm_dx = np.linalg.norm(dx)
             if i > 1:
@@ -128,20 +124,18 @@ def newton(
             Delta_x -= dx
             x = x0 + Delta_x
 
-            # new function value, error and convergence check
+            # new function value and residual error
             f = np.atleast_1d(fun(x))
-            error = np.linalg.norm(f / scale) / scale.size**0.5
+            error_f = np.linalg.norm(f / scale_f) / scale_f.size**0.5
 
-            # # step-size error
-            # scale = atol + np.maximum(np.abs(x0), np.abs(x)) * rtol
-            # error = np.linalg.norm(dx / scale) / scale.size**0.5
+            # step-size error
+            scale_x = atol + np.maximum(np.abs(x0), np.abs(x)) * rtol
+            error_x = np.linalg.norm(dx / scale_x) / scale_x.size**0.5
 
+            error = max(error_f, error_x)
             converged = error < 1
             if converged:
                 break
-
-    if not converged:
-        print(f"")
 
     return _RichResult(
         x=x,

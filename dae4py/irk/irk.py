@@ -118,7 +118,6 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6
 
             # update y and y'
             y1 = y0 + h * b.dot(Yp)
-            y1 = Y[-1]
             yp1 = Yp[-1]  # only correct for stiffly accurate methods
 
             # append to solution arrays

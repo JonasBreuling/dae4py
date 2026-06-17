@@ -251,8 +251,7 @@ index = INDEX if INDEX in [0, 1, 2, 3] else (2 if INDEX == "GGL" else 1)
 problem = DAEProblem(
     name="particle",
     F=F,
-    t_span=(0.1 * np.pi, 0.45 * np.pi),
-    # t_span=(0, 2 * np.pi),
+    t_span=(0, 2 * np.pi),
     index=index,
     true_sol=true_sol,
     jac=jac,

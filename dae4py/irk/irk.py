@@ -47,7 +47,6 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6
 
     y0, yp0 = np.atleast_1d(y0), np.atleast_1d(yp0)
     m = len(y0)
-    s = len(c)
 
     # initial guess for stage derivatives
     Yp = np.tile(yp0, s).reshape(s, -1)

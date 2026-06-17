@@ -14,6 +14,7 @@ def rhs(t, y):
 
 
 def F(t, y, yp):
+    return yp - rhs(t, y)
     y1, y2, y3 = y
     y1p, y2p, y3p = yp
 

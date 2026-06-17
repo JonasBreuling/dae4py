@@ -10,7 +10,7 @@ def newton(
     jac="3-point",
     atol=1e-6,
     rtol=1e-6,
-    max_iter=1000,
+    max_iter=100,
     chord=False,
 ):
     """

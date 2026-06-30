@@ -24,7 +24,7 @@ class ExplicitButcherTableau:
         assert np.allclose(cls.A, np.tril(cls.A, -1)), f"Method '{cls}' is implicit"
         assert cls.A.shape == (cls.n_stages, cls.n_stages), f"Method '{cls}' has flawed coefficient matrix A"
         assert len(cls.b) == cls.n_stages, f"Method '{cls}' has flawed quadrature weights b"
-        assert len(cls.c) == cls.n_stages, f"Method '{cls}' has flawed quadrature weights b_hat"
+        assert len(cls.c) == cls.n_stages, f"Method '{cls}' has flawed quadrature nodes c"
         assert len(cls.b_hat) == cls.n_stages + 1, f"Method '{cls}' has flawed quadrature weights b_hat"
         assert cls.order != cls.error_estimator_order, f"Method '{cls}' has same order for embedded method"
 

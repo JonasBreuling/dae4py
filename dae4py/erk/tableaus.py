@@ -1,12 +1,6 @@
 import numpy as np
 from scipy._lib._util import _RichResult
 
-# Multiply steps computed from asymptotic behaviour of errors by this.
-SAFETY = 0.9
-
-MIN_FACTOR = 0.2  # Minimum allowed decrease in a step-size.
-MAX_FACTOR = 10  # Maximum allowed increase in a step-size.
-
 
 class ExplicitButcherTableau:
     A = NotImplemented

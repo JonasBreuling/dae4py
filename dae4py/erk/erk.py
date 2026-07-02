@@ -11,14 +11,13 @@ MAX_FACTOR = 10  # Maximum allowed increase in a step-size.
 
 def solve_ode(
     fun,
-    t0,
     y0,
     t_span,
     t_eval=None,
     method=RK23,
     rtol=1e-3,
     atol=1e-6,
-    h0=1e-3,
+    h0=1e-2,
 ):
     # Do some sanity checks
     method.verify_tableau()
@@ -38,6 +37,7 @@ def solve_ode(
         [2, -2, 1, 1],
     ], dtype=float)
 
+    t0 = t_span[0]
     n = len(y0)
     f0 = fun(t0, y0)
     Y_dot = np.empty((n_stages + 1, n), dtype=y0.dtype)

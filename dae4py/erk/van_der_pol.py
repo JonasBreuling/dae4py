@@ -5,7 +5,6 @@ from scipy.integrate import solve_ivp
 
 if __name__ == "__main__":
     eps = 1e-2
-    mu = 1 / np.sqrt(eps)
 
     def rhs(t, y):
         z1, z2 = y
@@ -26,10 +25,10 @@ if __name__ == "__main__":
     # method = RK23
     method = RK45
 
-    atol = 1e-2
-    rtol = 1e-2
+    atol = 1e-3
+    rtol = 1e-6
 
-    sol = solve_ode(rhs, t0, y0, t_span=t_span, t_eval=t_eval, atol=atol, rtol=rtol)
+    sol = solve_ode(rhs, y0, t_span=t_span, t_eval=t_eval, atol=atol, rtol=rtol)
     t, h, y, y_eval = sol.t, sol.h, sol.y, sol.y_eval
 
     sol2 = solve_ivp(rhs, t_span, y0, atol=atol, rtol=rtol)

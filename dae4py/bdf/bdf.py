@@ -16,7 +16,7 @@ BDF_COEFFICIENTS = [
 ]
 
 
-def solve_dae_BDF(F, y0, yp0, t_span, h, atol=1e-6, rtol=1e-6):
+def solve_dae_BDF(F, y0, yp0, t_span, h, atol=1e-6, rtol=1e-6, newton_solver=newton):
     """
     Solves a system of DAEs using BDF methods.
 
@@ -31,11 +31,18 @@ def solve_dae_BDF(F, y0, yp0, t_span, h, atol=1e-6, rtol=1e-6):
     t_span: Tuple
         (t0, t1) defining the time span.
     h: float
-        Step-size.
+        Requested step-size. Adjusted to the closest value that divides
+        t_span into an integer number of equal steps, so the last step
+        lands exactly on t1.
     atol: float, defaul: 1e-6
         Absolute tolerance for the Newton solver.
     rtol: float, default: 1e-6
         Relative tolerance for the Newton solver.
+    newton_solver: callable, default: dae4py.math.newton
+        Nonlinear solver used for the implicit stage equation at every
+        step, e.g. dae4py.math.newton or dae4py.math.trust_region_newton.
+        Must accept (fun, x0, atol, rtol) and return a _RichResult with
+        `.x` and `.success`.
 
     Returns
     -------
@@ -54,6 +61,13 @@ def solve_dae_BDF(F, y0, yp0, t_span, h, atol=1e-6, rtol=1e-6):
     y0, yp0 = np.atleast_1d(y0), np.atleast_1d(yp0)
     m = len(y0)
 
+    # snap the step-size so it divides t_span into an integer number of
+    # equal steps and hits t1 exactly, instead of leaving an irregular
+    # final step; this also keeps the history uniformly spaced, which
+    # the fixed BDF coefficients below assume
+    n_steps = max(1, round((t1 - t0) / h))
+    h = (t1 - t0) / n_steps
+
     # initialize solution arrays
     t = [t0]
     y = [y0]
@@ -64,23 +78,23 @@ def solve_dae_BDF(F, y0, yp0, t_span, h, atol=1e-6, rtol=1e-6):
     history[0] = y0
     yp1 = yp0
 
-    # progress bar for tracking
-    steps = int(np.ceil((t1 - t0) / h))
-    with tqdm(total=steps, desc="BDF integration") as pbar:
+    with tqdm(total=n_steps, desc="BDF integration") as pbar:
         order = 1
-        while t0 < t1:
+        for step in range(n_steps):
+            tn = t0 + step * h
+
             # get BDF coefficients of the current order
             coeffs = BDF_COEFFICIENTS[order - 1]
 
             def residual(yp1):
                 y1 = (h * yp1 - np.dot(coeffs[:-1], history[:order])) / coeffs[-1]
-                return np.atleast_1d(F(t0 + h, y1, yp1))
+                return np.atleast_1d(F(tn + h, y1, yp1))
 
             # solve the nonlinear system
-            sol = newton(residual, yp1, atol=atol, rtol=rtol)
+            sol = newton_solver(residual, yp1, atol=atol, rtol=rtol)
             if not sol.success:
                 raise RuntimeError(
-                    f"Newton solver failed at t={t0 + h} with error={sol.error:.2e}"
+                    f"Newton solver failed at t={tn + h} with error={sol.error:.2e}"
                 )
 
             # extract the solution
@@ -89,9 +103,8 @@ def solve_dae_BDF(F, y0, yp0, t_span, h, atol=1e-6, rtol=1e-6):
             history[order] = y1
 
             # advance time, append to solution arrays and update progress bar
-            t0 += h
             pbar.update(1)
-            t.append(t0)
+            t.append(tn + h)
             y.append(y1)
             yp.append(yp1)
 

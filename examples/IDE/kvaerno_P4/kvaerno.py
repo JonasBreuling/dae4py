@@ -62,9 +62,11 @@ def true_sol(t):
 
 
 problem = DAEProblem(
-    name="Kvaernø",
+    name="Kvaerno",
     F=F,
-    t_span=(0.1, 1.2),
+    # t_span=(0.1, 1.2),
+    # t_span=(0.1, 0.8),
+    t_span=(0.5, 1.0), # original values of Kvaerno P4
     index=1,
     true_sol=true_sol,
     jac=jac,

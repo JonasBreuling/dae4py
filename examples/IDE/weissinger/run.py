@@ -5,6 +5,7 @@ from dae4py.bdf import solve_dae_BDF
 from dae4py.butcher_tableau import radau_tableau, gauss_legendre_tableau
 from dae4py.radau import solve_dae_radau
 from weissinger import problem
+from dae4py.benchmark import convergence_analysis
 
 
 def trajectory(s=None, tableau=None):
@@ -79,9 +80,39 @@ def adaptive_radau_IIA(s=3):
     plt.show()
 
 
-if __name__ == "__main__":
-    trajectory()  # BDF case
-    trajectory(s=2, tableau=gauss_legendre_tableau)
-    trajectory(s=2, tableau=radau_tableau)
+def convergence():
+    Dt = problem.t1 - problem.t0
+    num = 20
+    pow_min = 0
+    # pow_max = 14
+    pow_max = 10
+    h_max = Dt / 4
+    # h0s = h_max * (1 / 2) ** (np.arange(pow_min, pow_max, dtype=float))
+    h0s = h_max * (1 / 2) ** (np.linspace(pow_min, pow_max, num=num, endpoint=True, dtype=float))
+    # h0s = h_max * (1 / 2) ** (1 / np.logspace(pow_min, pow_max, num=num, dtype=float))
 
-    adaptive_radau_IIA(s=3)
+    rtols = 1e-13 * np.ones_like(h0s)
+    atols = 1e-13 * np.ones_like(h0s)
+    # rtols = 1e-17 * np.ones_like(h0s)
+    # atols = 1e-14 * np.ones_like(h0s)
+
+    print(f"rtols: {rtols}")
+    print(f"atols: {atols}")
+    print(f"h0s: {h0s}")
+
+    errors, rates = convergence_analysis(
+        problem,
+        rtols,
+        atols,
+        h0s,
+    )
+
+
+if __name__ == "__main__":
+    # trajectory()  # BDF case
+    # trajectory(s=2, tableau=gauss_legendre_tableau)
+    # trajectory(s=2, tableau=radau_tableau)
+
+    # adaptive_radau_IIA(s=3)
+
+    convergence()

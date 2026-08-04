@@ -4,7 +4,9 @@ from scipy._lib._util import _RichResult
 from dae4py.math import newton
 
 
-def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6):
+def solve_dae_IRK(
+    F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6, newton_solver=newton
+):
     """
     Solves a system of DAEs using implicit Runge-Kutta methods.
 
@@ -19,7 +21,9 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6
     t_span: Tuple
         (t0, t1) defining the time span.
     h: float
-        Step-size.
+        Requested step-size. Adjusted to the closest value that divides
+        t_span into an integer number of equal steps, so the last step
+        lands exactly on t1.
     tableau:
         Butcher tableau defining the IRK method.
     atol: float, defaul: 1e-6
@@ -28,6 +32,11 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6
         Relative tolerance for the Newton solver.
     jac: callable
         Jacobian of the method. Returns (M, J) = (dF/dy', dF/dy).
+    newton_solver: callable, default: dae4py.math.newton
+        Nonlinear solver used for the stage equations at every step, e.g.
+        dae4py.math.newton or dae4py.math.trust_region_newton. Must accept
+        (fun, x0, jac, atol, rtol) and return a _RichResult with `.x` and
+        `.success`.
 
     Returns
     -------
@@ -48,6 +57,12 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6
     y0, yp0 = np.atleast_1d(y0), np.atleast_1d(yp0)
     m = len(y0)
 
+    # snap the step-size so it divides t_span into an integer number of
+    # equal steps and hits t1 exactly, instead of leaving an irregular
+    # final step
+    n_steps = max(1, round((t1 - t0) / h))
+    h = (t1 - t0) / n_steps
+
     # initial guess for stage derivatives
     Yp = np.tile(yp0, s).reshape(s, -1)
     Y = y0 + h * A.dot(Yp)
@@ -59,11 +74,12 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6
     Ys = [Y]
     Yps = [Yp]
 
-    steps = int(np.ceil((t1 - t0) / h))
-    with tqdm(total=steps, desc="IRK integration") as pbar:
-        while t0 < t1:
+    with tqdm(total=n_steps, desc="IRK integration") as pbar:
+        for step in range(n_steps):
+            tn = t0 + step * h
+
             # precompute stage times
-            T = t0 + c * h
+            T = tn + c * h
 
             def residual(Yp_flat):
                 # reshape flat input to stage derivatives
@@ -77,7 +93,7 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6
                 for i in range(s):
                     FF[i] = F(T[i], Y[i], Yp[i])
                 return FF.flatten()
-            
+
             if jac is not None:
                 def jacobian(Yp_flat):
                     # reshape flat input to stage derivatives
@@ -105,10 +121,10 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6
                 jacobian = "3-point"
 
             # solve the nonlinear system
-            sol = newton(residual, Yp.flatten(), jac=jacobian, atol=atol, rtol=rtol)
+            sol = newton_solver(residual, Yp.flatten(), jac=jacobian, atol=atol, rtol=rtol)
             if not sol.success:
                 raise RuntimeError(
-                    f"Newton solver failed at t={t0 + h} with error={sol.error:.2e}"
+                    f"Newton solver failed at t={tn + h} with error={sol.error:.2e}"
                 )
 
             # extract the solution for stages
@@ -120,14 +136,13 @@ def solve_dae_IRK(F, y0, yp0, t_span, h, tableau, jac=None, atol=1e-6, rtol=1e-6
             yp1 = Yp[-1]  # only correct for stiffly accurate methods
 
             # append to solution arrays
-            t.append(t0 + h)
+            t.append(t0 + (step + 1) * h)
             y.append(y1)
             yp.append(yp1)
             Ys.append(Y)
             Yps.append(Yp)
 
-            # advance time, update initial values and progress bar
-            t0 += h
+            # update initial values and progress bar
             y0 = y1.copy()
             pbar.update(1)
 

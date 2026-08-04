@@ -23,7 +23,8 @@ def true_sol(t):
 problem = DAEProblem(
     name="Weissinger",
     F=F,
-    t_span=(np.sqrt(0.5), 10),
+    # t_span=(np.sqrt(0.5), 10),
+    t_span=(np.sqrt(0.5), 3),
     index=0,
     true_sol=true_sol,
     jac=jac,

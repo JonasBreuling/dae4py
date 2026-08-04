@@ -4,12 +4,18 @@ import matplotlib.pyplot as plt
 from dae4py.bdf import solve_dae_BDF
 from dae4py.irk import solve_dae_IRK
 from dae4py.butcher_tableau import radau_tableau, gauss_legendre_tableau
+from dae4py.math import newton, trust_region_newton
+
+
+newton_solver = newton
+# newton_solver = trust_region_newton
+
 
 solvers = [
-    ("RadauIIA(1)", solve_dae_IRK, {"tableau": radau_tableau(1)}),
-    ("RadauIIA(2)", solve_dae_IRK, {"tableau": radau_tableau(2)}),
-    ("RadauIIA(3)", solve_dae_IRK, {"tableau": radau_tableau(3)}),
-    ("RadauIIA(4)", solve_dae_IRK, {"tableau": radau_tableau(4)}),
+    ("RadauIIA(1)", solve_dae_IRK, {"tableau": radau_tableau(1), "newton_solver": newton_solver}),
+    ("RadauIIA(2)", solve_dae_IRK, {"tableau": radau_tableau(2), "newton_solver": newton_solver}),
+    ("RadauIIA(3)", solve_dae_IRK, {"tableau": radau_tableau(3), "newton_solver": newton_solver}),
+    ("RadauIIA(4)", solve_dae_IRK, {"tableau": radau_tableau(4), "newton_solver": newton_solver}),
     # # ("Gauss-Legendre(1)", solve_dae_IRK, {"tableau": gauss_legendre_tableau(1)}),
     # # ("Gauss-Legendre(2)", solve_dae_IRK, {"tableau": gauss_legendre_tableau(2)}),
     # ("Gauss-Legendre(3)", solve_dae_IRK, {"tableau": gauss_legendre_tableau(3)}),
@@ -50,13 +56,13 @@ def convergence_analysis(problem, rtols, atols, h0s):
             end = time.time()
             elapsed_time = end - start
 
-            # error
+            # error at the final time (solvers now hit t1 exactly)
+            assert np.isclose(sol.t[-1], problem.t1)
             y_true, yp_true = problem.true_sol(problem.t1)
-            idx = np.where(np.isclose(sol.t, problem.t1))[0][0]
-            diff_y = y_true - sol.y[idx]
+            diff_y = y_true - sol.y[-1]
             error_y = np.abs(diff_y)
             print(f"     => error_y: {error_y}")
-            diff_yp = yp_true - sol.yp[idx]
+            diff_yp = yp_true - sol.yp[-1]
             error_yp = np.abs(diff_yp)
             print(f"     => error_yp: {error_yp}")
 
@@ -104,6 +110,10 @@ def convergence_analysis(problem, rtols, atols, h0s):
 
     fig, ax = plt.subplots(1, n, figsize=(12, 9))
 
+    # handle scalar systems, e.g. Weissinger
+    if n == 1:
+        ax = [ax]
+
     for j in range(n):
         ax[j].plot(h0s, h0s, "--", label="h")
         ax[j].plot(h0s, h0s**2, "--", label="h^2")
@@ -111,6 +121,7 @@ def convergence_analysis(problem, rtols, atols, h0s):
         ax[j].plot(h0s, h0s**4, "--", label="h^4")
         ax[j].plot(h0s, h0s**5, "--", label="h^5")
         ax[j].plot(h0s, h0s**6, "--", label="h^6")
+        ax[j].plot(h0s, h0s**7, "--", label="h^7")
         for i, ei in enumerate(errors_y):
             ax[j].plot(
                 h0s, ei[:, j], "-o", label=f"{solvers[i][0]}; p≈{rates_y[i, j]:0.2f}"
@@ -125,6 +136,10 @@ def convergence_analysis(problem, rtols, atols, h0s):
         ax[j].set_ylabel(f"||y_{j},ref(t1) - y_{j}(t1)||")
 
     fig, ax = plt.subplots(1, n, figsize=(12, 9))
+
+    # handle scalar systems, e.g. Weissinger
+    if n == 1:
+        ax = [ax]
 
     for j in range(n):
         ax[j].plot(h0s, h0s, "--", label="h")

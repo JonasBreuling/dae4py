@@ -50,6 +50,18 @@ def newton(
             - nfev (int): Number of function evaluations.
             - njev (int): Number of Jacobian evaluations.
             - rate (float or None): Estimated convergence rate.
+
+    Notes
+    -----
+    Once the residual already satisfies atol/rtol but the step dx has
+    stopped shrinking (rate close to or above 1, i.e. it is no longer
+    converging quadratically), further correction is dominated by
+    floating-point noise rather than real progress towards the root: dx
+    can plateau at some floor set by the precision of fun/jac and never
+    satisfy the step-size criterion, no matter how many more iterations
+    run. In that case convergence is accepted on the residual alone
+    instead of stalling until max_iter for an unreachable step-size
+    target.
     """
     nfev = 0
     njev = 0
@@ -134,6 +146,16 @@ def newton(
 
             error = max(error_f, error_x)
             converged = error < 1
+
+            # the step has stopped shrinking (no longer converging
+            # quadratically) yet the residual already meets tolerance:
+            # further iterations would only chase floating-point noise in
+            # dx, not real movement towards the root, so accept on the
+            # residual alone rather than stalling out until max_iter
+            if not converged and error_f < 1 and rate is not None and rate > 0.9:
+                converged = True
+                error = error_f
+
             if converged:
                 break
 
